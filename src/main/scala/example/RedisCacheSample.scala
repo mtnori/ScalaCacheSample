@@ -1,37 +1,33 @@
 package example
 
-import scalacache._
-import scalacache.redis._
-import scalacache.serialization.binary._
+import akka.actor.ActorSystem
+import redis.RedisClient
 
 import scala.concurrent.Await
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.Duration
 
 object RedisCacheSample extends App {
+  implicit val akkaSystem: ActorSystem = akka.actor.ActorSystem()
 
-  //キャッシュインスタンス生成: 実装はCaffeine
-  implicit val cache: Cache[Cat] = RedisCache("localhost", 6379)
+  val redis = RedisClient()
 
-  //モードの指定(Try)
-  import scalacache.modes.try_._
+  val futurePong = redis.ping()
+  println("Ping sent!")
 
-  //エントリを追加
-  put(Cat.duchess.id)(Cat.duchess)
+  futurePong.map(pong => {
+    println(s"Redis replied with a $pong")
+  })
+  Await.result(futurePong, 5 seconds)
 
-  //参照
-  val foo = get(Cat.duchess.id) //Success(Some(Cat(1,Duchess,white)))
-  //キャッシュミス
-  var bar = get(Cat.thomas.id) //Success(None)
+  val futureSet = redis.set[Cat](Cat.thomas.id.toString, Cat.thomas)
+  Await.result(futureSet, 5 seconds)
 
-  //削除
-  remove(Cat.duchess.id) //Success(())
-  remove(Cat.marie.id) //Success(())
+  val futureGet = redis.get[Cat]("1")
+  futureGet.map(data => {
+    println(s"${data.getOrElse(throw new Exception("no find"))}")
+  })
+  Await.result(futureGet, 5 seconds)
 
-//  //キャッシュの更新処理を指定
-//  cachingF(Cat.thomas.id)(ttl = None)(Try {
-//    println(s"where is the cat(id=${Cat.thomas.id}) ??")
-//    Cat.thomas
-//  })
+  akkaSystem.terminate()
 }

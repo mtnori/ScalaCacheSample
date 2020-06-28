@@ -12,5 +12,8 @@ lazy val root = (project in file("."))
   )
 
 // See https://www.scala-sbt.org/1.x/docs/Using-Sonatype.html for instructions on how to publish to Sonatype.
-libraryDependencies += "com.github.cb372" %% "scalacache-caffeine" % "0.28.0"
-libraryDependencies += "com.github.cb372" %% "scalacache-redis" % "0.28.0"
+libraryDependencies += "com.github.blemale" %% "scaffeine" % "3.1.0" % "compile"
+libraryDependencies += "com.github.etaty" %% "rediscala" % "1.8.0"
+libraryDependencies += "io.circe" %% "circe-core" % "0.13.0"
+libraryDependencies += "io.circe" %% "circe-parser" % "0.13.0"
+libraryDependencies += "io.circe" %% "circe-generic" % "0.13.0"
